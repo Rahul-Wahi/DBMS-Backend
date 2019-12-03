@@ -30,9 +30,7 @@ public class MyResource {
     @Path("/crime")
     @Produces(MediaType.APPLICATION_JSON)
     public List<CrimeData> getIt() throws SQLException {
-    	Todo todo = new Todo();
-    	todo.first = 1;
-    	todo.second = 2;
+    	
     	ResultSet rs = DBConnection.processQuery("select * from crime_data Fetch First 1000 rows only");
     	List<CrimeData>  result = crimeDataRowMapper( rs ) ;
     	DBConnection.con.close();
@@ -42,30 +40,98 @@ public class MyResource {
     @GET
     @Path("/crime/area/{area}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Todo crimedataByArea( @PathParam("area") String area) {
-    	Todo todo = new Todo();
-    	Integer A_Id = Integer.parseInt(area) ;
-    	todo.first = 1;
-    	todo.second = 2;
+    public List<CrimeData> crimedataByArea( @PathParam("area") String area) throws SQLException {
     	
-    	DBConnection.processQuery("select * from crime_data where A_id = " + A_Id  );
-        return todo;
+    	Integer A_Id = Integer.parseInt(area) ;
+    	
+    	ResultSet rs = DBConnection.processQuery("select * from crime_data where A_id = " + A_Id  );
+    	List<CrimeData>  result = crimeDataRowMapper( rs ) ;
+    	DBConnection.con.close();
+        return result;
     }
     
+    //Crime types
+    @GET
+    @Path("/crimetype")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<CrimeType> crimedataByType( @PathParam("type") String type) throws SQLException {
+    	
+    	ResultSet rs = DBConnection.processQuery("select * from crime_type "  );
+    	List<CrimeType> result = crimeTypeRowMapper(rs ) ;
+    	DBConnection.con.close();
+        return result;
+    }
+    
+    
+    //Crime data on with filter crime type
     @GET
     @Path("/crime/type/{type}")
     @Produces(MediaType.APPLICATION_JSON)
-    public Todo crimedataByType( @PathParam("type") String type) {
-    	Todo todo = new Todo();
-    	//Integer c_type = Integer.parseInt(type) ;
-    	todo.first = 1;
-    	todo.second = 2;
+    public List<CrimeData> crimeType( @PathParam("type") String type) throws SQLException {
     	
-    	DBConnection.processQuery("select * from crime_data where C_Type = '" + type + "'"  );
-        return todo;
+    	
+    	ResultSet rs = DBConnection.processQuery("select * from crime_data where C_Type = '" + type + "'"  );
+    	List<CrimeData>  result = crimeDataRowMapper( rs ) ;
+    	DBConnection.con.close();
+        return result;
+    }
+    
+    @GET
+    @Path("/area")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Area> area() throws SQLException {
+    	
+    	ResultSet rs = DBConnection.processQuery("select * from Street_Address "  );
+    	List<Area> result = areaRowMapper(rs ) ; 
+        return result;
+    }
+   
+    @GET
+    @Path("/unemployement")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<Unemployement> unemployement(  ) throws SQLException {
+    	
+    	ResultSet rs = DBConnection.processQuery("select * from Unemployement "  );
+    	List<Unemployement> result = unemployementRowMapper(rs ) ;
+    	DBConnection.con.close();
+        return result;
+    }
+   
+    @GET
+    @Path("/crime/rate")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<CrimeRate> crimeRate(  ) throws SQLException {
+    	
+    	ResultSet rs = DBConnection.processQuery("SELECT COUNT(id) as count , year FROM (SELECT  id, EXTRACT(YEAR FROM REPORT_DATE) AS year  FROM crime_data )\n" + 
+    			"GROUP BY year "  );
+    	List<CrimeRate> result = crimeRateRowMapper(rs ) ;
+    	DBConnection.con.close();
+        return result;
     }
     
     
+   
+    @GET
+    @Path("/crimetype/maxarea")
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<CrimeRate> crimeTypeMaxArea(  ) throws SQLException {
+    	
+    	ResultSet rs = DBConnection.processQuery("select CD.C_TYPE, SA.address\n" + 
+    			"from crime_data CD, street_address SA\n" + 
+    			"where CD.A_ID = SA.ID\n" + 
+    			"GROUP BY C_TYPE, address\n" + 
+    			"HAVING COUNT(report_date) = (SELECT MAX(COUNT(report_date)) from crime_data CD, street_address SA\n" + 
+    			"where CD.A_ID = SA.ID\n" + 
+    			"GROUP BY C_TYPE, address) "  );
+    	List<CrimeRate> result = crimeRateRowMapper(rs ) ;
+    	DBConnection.con.close();
+        return result;
+    }
+   
+    
+    
+    
+   
     
     @POST
     public String postIt(Todo todo) {
@@ -95,6 +161,115 @@ public class MyResource {
     		//System.out.println("Debug");
     		//System.out.println(rs.getObject(1) + "  " + rs.getObject(2) + "  " + rs.getObject(3));
     		list.add(crimedata) ;
+    	}
+			//System.out.println(rs.getObject(1) + "  " + rs.getObject(2) + "  " + rs.getObject(3));
+    		
+    	return list;
+    	    
+
+    }
+    
+    //Crime Type mapper
+    public List<CrimeType> crimeTypeRowMapper( ResultSet rs ) throws SQLException
+    {
+    	List<CrimeType> list = new ArrayList<CrimeType>() ;
+    	while (rs.next()) {
+    		CrimeType crimetype = new CrimeType();
+    		
+    		crimetype.setCrimeType( rs.getObject(1));
+    		
+    		//System.out.println("Debug");
+    		//System.out.println(rs.getObject(1) + "  " + rs.getObject(2) + "  " + rs.getObject(3));
+    		list.add(crimetype) ;
+    	}
+			//System.out.println(rs.getObject(1) + "  " + rs.getObject(2) + "  " + rs.getObject(3));
+    		
+    	return list;
+    	    
+
+    }
+    
+  //Area mapper
+    public List<Area> areaRowMapper( ResultSet rs ) throws SQLException
+    {
+    	List<Area> list = new ArrayList<Area>() ;
+    	while (rs.next()) {
+    		Area area = new Area();
+    		
+    		area.setA_id( rs.getObject(1));
+    		area.setStreet_address(rs.getObject(2));
+    		
+    		//System.out.println("Debug");
+    		//System.out.println(rs.getObject(1) + "  " + rs.getObject(2) + "  " + rs.getObject(3));
+    		list.add(area) ;
+    	}
+			//System.out.println(rs.getObject(1) + "  " + rs.getObject(2) + "  " + rs.getObject(3));
+    		
+    	return list;
+    	    
+
+    }
+    
+  //Unemployment mapper
+    public List<Unemployement> unemployementRowMapper( ResultSet rs ) throws SQLException
+    {
+    	List<Unemployement> list = new ArrayList<Unemployement>() ;
+    	while (rs.next()) {
+    		Unemployement unemployement = new Unemployement();
+    		
+    		unemployement.setYear( rs.getObject(1));
+    		
+    		unemployement.setRate( rs.getObject(2) ) ;
+    		
+    		//System.out.println("Debug");
+    		//System.out.println(rs.getObject(1) + "  " + rs.getObject(2) + "  " + rs.getObject(3));
+    		list.add(unemployement) ;
+    	}
+			//System.out.println(rs.getObject(1) + "  " + rs.getObject(2) + "  " + rs.getObject(3));
+    		
+    	return list;
+    	    
+
+    }
+    
+    
+    //Unemployment mapper
+    public List<CrimeRate> crimeRateRowMapper( ResultSet rs ) throws SQLException
+    {
+    	List<CrimeRate> list = new ArrayList<CrimeRate>() ;
+    	while (rs.next()) {
+    		CrimeRate crimeRate = new CrimeRate();
+    		
+    		crimeRate.setYear( rs.getObject(2));
+    		
+    		crimeRate.setCrimeCount( rs.getObject(1) ) ;
+    		
+    		//System.out.println("Debug");
+    		//System.out.println(rs.getObject(1) + "  " + rs.getObject(2) + "  " + rs.getObject(3));
+    		list.add(crimeRate) ;
+    	}
+			//System.out.println(rs.getObject(1) + "  " + rs.getObject(2) + "  " + rs.getObject(3));
+    		
+    	return list;
+    	    
+
+    }
+    
+    
+    //crimeTypeMaxArea mapper
+    public List<CrimeData> crimeTypeMaxAreaRowMapper( ResultSet rs ) throws SQLException
+    {
+    	List<CrimeData> list = new ArrayList<CrimeData>() ;
+    	while (rs.next()) {
+    		CrimeData crimeData = new CrimeData();
+    		
+    		crimeData.setC_type( rs.getObject(1));
+    		
+    		crimeData.setArea( rs.getObject(2 ) );
+    		
+    		//System.out.println("Debug");
+    		//System.out.println(rs.getObject(1) + "  " + rs.getObject(2) + "  " + rs.getObject(3));
+    		list.add(crimeData) ;
     	}
 			//System.out.println(rs.getObject(1) + "  " + rs.getObject(2) + "  " + rs.getObject(3));
     		

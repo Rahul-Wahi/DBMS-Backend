@@ -15,6 +15,7 @@ public class CrimeData {
 	public String s_name ;
 	public String c_type ;
 	public long a_id ;
+	public String area ;
 	public Long getId() {
 		return id;
 	}
@@ -112,6 +113,13 @@ public class CrimeData {
 	public void setA_id(Object a_id) {
 		if( a_id != null)
 		this.a_id = Long.parseLong( a_id.toString() );
+	}
+	public String getArea() {
+		return area;
+	}
+	public void setArea(Object area) {
+		if( area != null)
+		this.area = area.toString();
 	}
 	
 	
